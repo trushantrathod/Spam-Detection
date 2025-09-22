@@ -1,4 +1,4 @@
-# 📧 Email Spam Detection AI
+# 📧 Spam Detection 
 A web application that uses **Machine Learning** to classify email messages as **Spam** or **Ham** (not spam).  
 The project features a **modern glassmorphism UI**, dynamic history logging, and real-time data visualization.
 
@@ -70,14 +70,8 @@ Navigate to:
 ```
 http://127.0.0.1:5000
 ```
-Your **Email Spam Detection AI** app is now live! 🎉  
+Your **Spam Detection** app is now live! 🎉  
 The `database.db` file will be automatically created during the first run.
-
----
-
-## 📊 Screenshots (Optional)
-_Add screenshots of your application’s interface here for a professional touch._
-
 ---
 
 ## 💡 Future Enhancements
@@ -86,6 +80,3 @@ _Add screenshots of your application’s interface here for a professional touch
 - User authentication for personalized history tracking.
 
 ---
-
-## 👨‍💻 Author
-**Your Name** – [Your GitHub/Portfolio Link]
