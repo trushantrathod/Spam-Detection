@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detection of Email</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // --- Theme Switcher ---
+        function toggleTheme() {
+            const body = document.body;
+            const themeInput = document.getElementById('theme-input');
+            body.classList.toggle('dark-theme');
+            themeInput.value = body.classList.contains('dark-theme') ? 'dark' : 'light';
+        }
+
+        // --- Run scripts after page is loaded ---
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Modal Logic ---
+            const modal = document.getElementById('history-modal');
+            const historyBtn = document.getElementById('history-btn');
+            const closeBtn = document.querySelector('.close-btn');
+            const openModal = () => modal.classList.remove('modal-hidden');
+            const closeModal = () => modal.classList.add('modal-hidden');
+
+            historyBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) { closeModal(); }
+            });
+
+            // --- AJAX Delete Logic ---
+            const historyTableBody = document.querySelector('.history-section tbody');
+            historyTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    e.preventDefault(); // Stop the link from navigating
+                    
+                    const row = e.target.closest('tr');
+                    const predictionId = e.target.dataset.id;
+                    const url = `/delete/${predictionId}`;
+
+                    fetch(url, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Fade out and remove the row from the table
+                            row.style.transition = 'opacity 0.5s ease';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                            }, 500);
+                        } else {
+                            alert('Error deleting record: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+
+            // --- Chart.js Logic ---
+            const chartCanvas = document.getElementById('predictionChart');
+            if (chartCanvas) {
+                const spamCount = parseInt(chartCanvas.dataset.spamCount, 10);
+                const hamCount = parseInt(chartCanvas.dataset.hamCount, 10);
+                
+                if (spamCount > 0 || hamCount > 0) {
+                    const ctx = chartCanvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Spam', 'Ham'],
+                            datasets: [{
+                                label: 'Prediction Distribution',
+                                data: [spamCount, hamCount],
+                                backgroundColor: [ 'rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)' ],
+                                borderColor: [ 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.8)' ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: { color: document.body.classList.contains('dark-theme') ? '#eee' : '#333' }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Prediction Distribution',
+                                    color: document.body.classList.contains('dark-theme') ? '#eee' : '#333'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</head>
+<body class="{{ theme }}-theme">
+    
+    <div class="top-right-controls">
+        <button id="history-btn" class="icon-button" aria-label="Show history">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <button id="theme-switcher" class="icon-button" onclick="toggleTheme()" aria-label="Toggle theme">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+    </div>
+
+    <div class="glass-container">
+        <div class="content">
+            <h1>Spam Detection of Email</h1>
+            <p>Analyze any message to determine if it's spam.</p>
+            <form action="{{ url_for('predict') }}" method="post">
+                <input type="hidden" name="theme" id="theme-input" value="{{ theme }}">
+                
+                <textarea name="message" rows="12" placeholder="Enter your message here...">{{ message if message }}</textarea>
+                <br>
+                <button type="submit">Analyze Message</button>
+            </form>
+
+            {% if prediction is not none %}
+            <div class="results-container">
+                <div class="prediction-result">
+                    {% if prediction == 1 %}
+                        <h2 class="spam">This is a Spam Email!</h2>
+                    {% elif prediction == 0 %}
+                        <h2 class="ham">This is a Ham Email!</h2>
+                    {% endif %}
+                </div>
+                <div class="chart-container">
+                    <canvas id="predictionChart" data-spam-count="{{ spam_count }}" data-ham-count="{{ ham_count }}"></canvas>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal-hidden">
+        <div class="modal-content">
+            <button class="close-btn">&times;</button>
+            <h2>Analysis History</h2>
+            <div class="modal-body">
+                <div class="history-section">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Message</th>
+                                <th>Result</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if history %}
+                                {% for row in history %}
+                                <tr>
+                                    <td>{{ row['message'][:30] }}...</td>
+                                    <td class="{{ 'spam-cell' if row['prediction'] == 'Spam' else 'ham-cell' }}">{{ row['prediction'] }}</td>
+                                    <td>{{ row['timestamp'] }}</td>
+                                    <td>
+                                        <a href="#" class="delete-btn" data-id="{{ row['id'] }}">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center;">No history yet.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

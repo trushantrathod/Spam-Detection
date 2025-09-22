@@ -1,0 +1,11 @@
+# Python virtual environment
+venv/
+__pycache__/
+
+# Database file
+database.db
+
+# IDE / OS specific files
+.vscode/
+.idea/
+*.DS_Store

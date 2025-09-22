@@ -1,0 +1,258 @@
+/* --- Google Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* --- CSS Variables for Theming --- */
+:root {
+    /* Light Theme */
+    --bg-light: #eef2f7;
+    --text-light: #3a3b3c;
+    --glass-bg-light: rgba(255, 255, 255, 0.4);
+    --border-light: rgba(255, 255, 255, 0.6);
+    --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --button-bg-light: linear-gradient(45deg, #007bff, #0056b3);
+    --spam-text-light: #d93025;
+    --ham-text-light: #1e8e3e;
+
+    /* Dark Theme */
+    --bg-dark: #18191a;
+    --text-dark: #e4e6eb;
+    --glass-bg-dark: rgba(40, 40, 40, 0.3);
+    --border-dark: rgba(255, 255, 255, 0.1);
+    --shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --button-bg-dark: linear-gradient(45deg, #4c00ff, #002d6b);
+}
+
+/* --- General Body and Background Styles --- */
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    padding: 2rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('https://images.unsplash.com/photo-1554034483-04fda0d3507b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: fixed;
+    filter: blur(10px);
+    z-index: -1;
+    transition: opacity 0.5s ease;
+}
+
+body.light-theme {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
+body.dark-theme {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+body.dark-theme::before {
+    opacity: 0.3;
+}
+
+/* --- Top Right Controls --- */
+.top-right-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.icon-button {
+    padding: 10px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-button svg { transition: stroke 0.3s ease; }
+.icon-button:hover { transform: scale(1.1); }
+
+/* Light theme buttons */
+body.light-theme .icon-button {
+    background: var(--glass-bg-light);
+    border-color: var(--border-light);
+}
+body.light-theme .icon-button svg { stroke: var(--text-light); }
+
+/* Dark theme buttons */
+body.dark-theme .icon-button {
+    background: var(--glass-bg-dark);
+    border-color: var(--border-dark);
+}
+body.dark-theme .icon-button svg { stroke: var(--text-dark); }
+
+/* --- Main Glassmorphism Container --- */
+.glass-container {
+    width: 90%;
+    max-width: 650px; /* Increased size */
+    padding: 2.5rem; /* Increased padding */
+    border-radius: 20px; /* Softer corners */
+    border: 1px solid;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    text-align: center;
+    transition: all 0.5s ease;
+    animation: fadeIn 1s ease-out;
+    margin: 2rem 0;
+}
+
+body.light-theme .glass-container {
+    background: var(--glass-bg-light);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-light);
+}
+
+body.dark-theme .glass-container {
+    background: var(--glass-bg-dark);
+    border-color: var(--border-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+/* --- Content and Form Styling --- */
+h1 {
+    font-size: 2.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+textarea {
+    width: 100%;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid;
+    margin-bottom: 1.5rem;
+    background: transparent;
+    color: inherit;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+body.light-theme textarea { border-color: var(--border-light); }
+body.dark-theme textarea { border-color: var(--border-dark); }
+
+textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+button[type="submit"] {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+body.light-theme button[type="submit"] { background: var(--button-bg-light); }
+body.dark-theme button[type="submit"] { background: var(--button-bg-dark); }
+
+button[type="submit"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Results, Modal & History --- */
+.results-container { display: flex; align-items: center; justify-content: space-around; margin-top: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+.prediction-result { flex: 1; min-width: 200px; }
+.chart-container { flex: 1; max-width: 250px; }
+
+.spam { color: var(--spam-text-light); animation: shake 0.5s; }
+.ham { color: var(--ham-text-light); animation: bounceIn 0.5s; }
+.error { color: var(--spam-text-light); }
+
+body.dark-theme .spam, body.dark-theme .error { color: #ff8a8a; }
+body.dark-theme .ham { color: #81c784; }
+
+#history-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 1; visibility: visible; transition: opacity 0.3s ease, visibility 0.3s ease; }
+#history-modal.modal-hidden { opacity: 0; visibility: hidden; }
+
+.modal-content {
+    position: relative;
+    padding: 2rem;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    transform: scale(1);
+    transition: transform 0.3s ease;
+}
+
+#history-modal.modal-hidden .modal-content { transform: scale(0.95); }
+body.light-theme .modal-content { background: var(--glass-bg-light); border-color: var(--border-light); box-shadow: var(--shadow-light); }
+body.dark-theme .modal-content { background: var(--glass-bg-dark); border-color: var(--border-dark); box-shadow: var(--shadow-dark); }
+
+.modal-body { display: flex; align-items: flex-start; }
+.close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 2rem; cursor: pointer; color: inherit; line-height: 1; }
+
+.history-section { flex: 1; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 12px; border-bottom: 1px solid; text-align: left; }
+tbody tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+body.light-theme th, body.light-theme td { border-color: var(--border-light); }
+body.dark-theme th, body.dark-theme td { border-color: var(--border-dark); }
+
+.spam-cell { color: var(--spam-text-light); font-weight: bold; }
+.ham-cell { color: var(--ham-text-light); font-weight: bold; }
+body.dark-theme .spam-cell { color: #ff8a8a; }
+body.dark-theme .ham-cell { color: #81c784; }
+
+.delete-btn { color: var(--spam-text-light); text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
+.delete-btn:hover { color: #ff1a1a; }
+body.dark-theme .delete-btn { color: #ff8a8a; }
+
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .modal-body { flex-direction: column; align-items: center; }
+    .history-section { width: 100%; flex: none; }
+    .results-container { flex-direction: column; }
+    h1 { font-size: 2rem; }
+}
