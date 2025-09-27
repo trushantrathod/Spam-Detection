@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spam Detection of Email</title>
+    <title>Spam Email Detection</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,7 +17,68 @@
             const body = document.body;
             const themeInput = document.getElementById('theme-input');
             body.classList.toggle('dark-theme');
-            themeInput.value = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            const newTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            themeInput.value = newTheme;
+            // Re-render chart with new theme colors
+            renderChart(newTheme);
+        }
+
+        function renderChart(theme) {
+            const chartCanvas = document.getElementById('predictionChart');
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+            if (chartCanvas) {
+                const spamCount = parseInt(chartCanvas.dataset.spamCount, 10);
+                const hamCount = parseInt(chartCanvas.dataset.hamCount, 10);
+                
+                const textColor = theme === 'dark' ? '#E5E7EB' : '#1F2937';
+                
+                if (spamCount > 0 || hamCount > 0) {
+                    const ctx = chartCanvas.getContext('2d');
+                    window.myChart = new Chart(ctx, {
+                        type: 'bar', // Changed to 'bar'
+                        data: {
+                            labels: ['Spam', 'Ham'],
+                            datasets: [{
+                                label: 'Total Count',
+                                data: [spamCount, hamCount],
+                                backgroundColor: [ 'rgba(239, 68, 68, 0.8)', 'rgba(34, 197, 94, 0.8)' ],
+                                borderColor: [ 'rgba(239, 68, 68, 1)', 'rgba(34, 197, 94, 1)' ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            indexAxis: 'y', // Makes the chart horizontal
+                            plugins: {
+                                legend: {
+                                    display: false // Legend is not needed for a simple bar chart
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Prediction Distribution',
+                                    color: textColor,
+                                    font: {
+                                        size: 16,
+                                        weight: '600'
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: textColor, stepSize: 1 },
+                                    grid: { color: theme === 'dark' ? '#374151' : '#E5E7EB' }
+                                },
+                                y: {
+                                    ticks: { color: textColor },
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         // --- Run scripts after page is loaded ---
@@ -38,104 +99,108 @@
 
             // --- AJAX Delete Logic ---
             const historyTableBody = document.querySelector('.history-section tbody');
-            historyTableBody.addEventListener('click', function(e) {
-                if (e.target.classList.contains('delete-btn')) {
-                    e.preventDefault(); // Stop the link from navigating
-                    
-                    const row = e.target.closest('tr');
-                    const predictionId = e.target.dataset.id;
-                    const url = `/delete/${predictionId}`;
+            if(historyTableBody) {
+                historyTableBody.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-btn')) {
+                        e.preventDefault(); 
+                        
+                        const row = e.target.closest('tr');
+                        const predictionId = e.target.dataset.id;
+                        const url = `/delete/${predictionId}`;
 
-                    fetch(url, {
-                        method: 'POST'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // Fade out and remove the row from the table
-                            row.style.transition = 'opacity 0.5s ease';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.remove();
-                            }, 500);
-                        } else {
-                            alert('Error deleting record: ' + data.message);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                }
-            });
+                        fetch(url, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                row.style.transition = 'opacity 0.5s ease';
+                                row.style.opacity = '0';
+                                setTimeout(() => { row.remove(); }, 500);
+                            } else {
+                                alert('Error deleting record: ' + data.message);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                });
+            }
+            
+            // --- Clear History ---
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
+            if(clearHistoryBtn) {
+                clearHistoryBtn.addEventListener('click', function() {
+                    if(confirm("Are you sure you want to clear all history? This cannot be undone.")) {
+                        fetch('/clear_history', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.status === 'success') {
+                                window.location.reload();
+                            } else {
+                                alert('Error clearing history: ' + data.message);
+                            }
+                        });
+                    }
+                });
+            }
 
             // --- Chart.js Logic ---
-            const chartCanvas = document.getElementById('predictionChart');
-            if (chartCanvas) {
-                const spamCount = parseInt(chartCanvas.dataset.spamCount, 10);
-                const hamCount = parseInt(chartCanvas.dataset.hamCount, 10);
-                
-                if (spamCount > 0 || hamCount > 0) {
-                    const ctx = chartCanvas.getContext('2d');
-                    new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Spam', 'Ham'],
-                            datasets: [{
-                                label: 'Prediction Distribution',
-                                data: [spamCount, hamCount],
-                                backgroundColor: [ 'rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)' ],
-                                borderColor: [ 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.8)' ],
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    labels: { color: document.body.classList.contains('dark-theme') ? '#eee' : '#333' }
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Prediction Distribution',
-                                    color: document.body.classList.contains('dark-theme') ? '#eee' : '#333'
-                                }
-                            }
-                        }
-                    });
-                }
-            }
+            renderChart(document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+
         });
     </script>
 </head>
 <body class="{{ theme }}-theme">
+
+    <div class="background-animation">
+        <div class="message-icon"></div> <div class="message-icon"></div> <div class="message-icon"></div>
+        <div class="message-icon"></div> <div class="message-icon"></div> <div class="message-icon"></div>
+        <div class="message-icon"></div> <div class="message-icon"></div> <div class="message-icon"></div>
+        <div class="message-icon"></div> <div class="message-icon"></div> <div class="message-icon"></div>
+        <div class="message-icon"></div> <div class="message-icon"></div> <div class="message-icon"></div>
+    </div>
     
     <div class="top-right-controls">
         <button id="history-btn" class="icon-button" aria-label="Show history">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
         </button>
         <button id="theme-switcher" class="icon-button" onclick="toggleTheme()" aria-label="Toggle theme">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
     </div>
 
-    <div class="glass-container">
+    <div class="main-container">
         <div class="content">
-            <h1>Spam Detection of Email</h1>
-            <p>Analyze any message to determine if it's spam.</p>
+            <h1>Spam Email Detection</h1>
+            <p>Check if emails are Spam or Ham.</p>
             <form action="{{ url_for('predict') }}" method="post">
                 <input type="hidden" name="theme" id="theme-input" value="{{ theme }}">
                 
-                <textarea name="message" rows="12" placeholder="Enter your message here...">{{ message if message }}</textarea>
+                <textarea name="message" rows="10" placeholder="Enter a message to analyze...">{{ message if message }}</textarea>
                 <br>
                 <button type="submit">Analyze Message</button>
             </form>
 
             {% if prediction is not none %}
             <div class="results-container">
-                <div class="prediction-result">
-                    {% if prediction == 1 %}
-                        <h2 class="spam">This is a Spam Email!</h2>
-                    {% elif prediction == 0 %}
-                        <h2 class="ham">This is a Ham Email!</h2>
+                <div class="prediction-details">
+                    <div class="prediction-result">
+                        {% if prediction == 1 %}
+                            <h2 class="spam">Result: Spam</h2>
+                        {% else %}
+                            <h2 class="ham">Result: Ham</h2>
+                        {% endif %}
+                        <p class="confidence">({{ confidence }}% confident)</p>
+                    </div>
+
+                    {% if keywords %}
+                    <div class="keywords-container">
+                        <h3>Influential Keywords:</h3>
+                        <div class="keywords-list">
+                            {% for keyword in keywords %}
+                                <span class="keyword">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
                 <div class="chart-container">
@@ -143,17 +208,16 @@
                 </div>
             </div>
             {% endif %}
-            
-            {% if error %}
-                <p class="error">{{ error }}</p>
-            {% endif %}
         </div>
     </div>
 
     <div id="history-modal" class="modal-hidden">
         <div class="modal-content">
+            <div class="modal-header">
+                <h2>Analysis History</h2>
+                <button id="clear-history-btn" class="clear-btn">Clear History</button>
+            </div>
             <button class="close-btn">&times;</button>
-            <h2>Analysis History</h2>
             <div class="modal-body">
                 <div class="history-section">
                     <table>
@@ -161,7 +225,7 @@
                             <tr>
                                 <th>Message</th>
                                 <th>Result</th>
-                                <th>Time</th>
+                                <th>Timestamp</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -169,7 +233,7 @@
                             {% if history %}
                                 {% for row in history %}
                                 <tr>
-                                    <td>{{ row['message'][:30] }}...</td>
+                                    <td>{{ row['message'][:40] }}{{ '...' if row['message']|length > 40 else '' }}</td>
                                     <td class="{{ 'spam-cell' if row['prediction'] == 'Spam' else 'ham-cell' }}">{{ row['prediction'] }}</td>
                                     <td>{{ row['timestamp'] }}</td>
                                     <td>
@@ -179,7 +243,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="4" style="text-align: center;">No history yet.</td>
+                                    <td colspan="4" style="text-align: center;">No analysis history found.</td>
                                 </tr>
                             {% endif %}
                         </tbody>
